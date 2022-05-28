@@ -1,47 +1,50 @@
-<h1> libraries</h1>
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import graphviz
 from sklearn.preprocessing import LabelEncoder
-from sklearn.tree import DecisionTreeClassifier, export_graphviz from sklearn.model_selection import train_test_split
-from sklearn .metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.model_selection import train_test_split
-from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 %matplotlib inline
 import seaborn as sns
 sns.set(color_codes=True)
-seed = 10
+from sklearn.metrics import confusion_matrix,accuracy_score,classification_report
 
-<h1>data set</h1>
+------
+
 df = pd.read_csv('C:\\Anaconda\\Lib\\site-packages\\sklearn\\datasets\\data\\heart.csv') df.head(None)
 
-<h1>Information </h1>
+------
+
 df.info()
 
-<h1>missing values</h1>
+-----
+
 df.isnull().any()
+
+----
 
 df.describe()
 
--------------
+----
 
 print(df['target'].value_counts())
 df['target'].hist()
 
-------------
+----
 
 plt.scatter(slic_df[['sex' ]], slic_df[['age']], color = "b", marker = ".") plt.xlabel('sex')
 plt.ylabel('age')
 plt.title('Scatter Plot')
 plt.show()
 
-----------
+-----
 
-sns.boxplot(x=df['target'],y=df['age']) plt.show()
+sns.boxplot(x=df['target'],y=df['age'])
+plt.show()
 
---------
+----
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) for ojha, feature in enumerate(list(df.columns)[:-1]):
@@ -49,13 +52,14 @@ fg = sns.FacetGrid(df, hue ='target', height=5)
     fg.map(sns.distplot, feature).add_legend()
 plt.show()
 
+-------
 
-------
-le = LabelEncoder()
-le.fit(df['target'].values)
-y = le.transform(df['target'].values)
+from sklearn.model_selection import train_test_split y =df['target'].values
 X = df.drop('target',axis=1).values
-X_train, X_test , y_train , y_test = train_test_split(X,y,test_size=0.34,stratify=y,random_state=seed)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+X_train, X_test , y_train , y_test = train_test_split(X,y,test_size=0.20,random_state=0)
 
 --------
 
@@ -75,15 +79,27 @@ y_test
 
 -------
 
-tree = DecisionTreeClassifier(criterion='gini', min_samples_leaf=5,
-min_samples_split=5,
-max_depth=None,
+
+max_depth_range = list(range(2,12)) accuracy = []
+for depth in max_depth_range:
+clf = DecisionTreeClassifier(criterion='entropy',splitter='best', min_samples_split=2, min_samples_leaf=1, max_depth=depth,
 random_state=seed)
+clf.fit(X_train, y_train)
+score = clf.score(X_test,y_test) accuracy.append (score)
+plt.plot(max_depth_range,accuracy)
+plt.xlabel('max_depth')
+plt.ylabel (' accuracy')
+
+-------
+
+tree = DecisionTreeClassifier(criterion='entropy', max_depth=8,
+random_state=0)
 tree.fit(X_train, y_train)
 y_pred=tree.predict(X_test)
-accuracy=accuracy_score(y_test,y_pred) print('DecisionTreeClassifier accuracy score: {}'.format(accuracy))
+accuracy=accuracy_score(y_test,y_pred)
+print('DecisionTreeClassifier accuracy score: {}'.format(accuracy*100))
 
--------------------
+-------
 
 from sklearn .metrics import confusion_matrix import matplotlib.pyplot as plt print('Confusion Matrix is') print(confusion_matrix(y_test,y_pred)) cm=confusion_matrix(y_test,y_pred) plt.matshow(cm)
 plt.show()
@@ -92,18 +108,25 @@ plt.show()
 
 from sklearn .metrics import classification_report print(classification_report(y_test,y_pred,labels=df['target'].unique()))
 
-------
+-------
+
+from sklearn.naive_bayes import GaussianNB from sklearn.metrics import f1_score classifier=GaussianNB() classifier.fit(X_train,y_train) y_pred2=classifier.predict(X_test) print(f1_score(y_test,y_pred2)*100)
+
+--------
 
 import os
 os.environ["PATH"] += os.pathsep +'C:/Program Files/Graphviz/bin'
-def plot_tree(tree,dataframe,label_col ,label_encoder , plot_title): label_name = ['age','sex','restecg']
+def plot_tree(tree,dataframe,label_col ,label_encoder , plot_title): label_name = ['age','sex']
 graph_data = export_graphviz(tree,
-feature_names=dataframe.drop(label_col,axis=1).columns, class_names=label_name,filled=True, rounded=True, out_file=None)
+feature_names=df.drop(label_col,axis=1).columns, class_names=label_name,
+filled=True,
+rounded=True,
+out_file=None)
 graph = graphviz.Source(graph_data) graph.render(plot_title)
 return graph
 tree_graph = plot_tree(tree, df, 'target',le,'heart') tree_graph
 
----------
+----------
 
 X = df['chol']
 Y = df['trestbps']
@@ -116,7 +139,7 @@ plt.ylabel('trestbps')
 plt.title('Scatter Plot')
 plt.show()
 
---------
+------------
 
 from sklearn.linear_model import LinearRegression #define the classifier
 classifier = LinearRegression()
@@ -127,7 +150,7 @@ print(y_pred)
 #print coefficient (a in y=ax+b)and intercept (the constant, b in y=ax+print('Coefficients:
 print('intercept: \n', classifier.intercept_)
 
--------
+----------
 
 #visualize regression function
 plt.scatter(df[['chol' ]],df[['trestbps']], color = "g", marker = "+", s = 50) plt.plot(df['chol'], y_pred, color ="r")
@@ -135,7 +158,3 @@ plt.xlabel('chol')
 plt.ylabel('trestbps')
 plt.title('Regression Function')
 plt.show()
-
-
-
-
